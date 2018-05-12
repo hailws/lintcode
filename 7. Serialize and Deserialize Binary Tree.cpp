@@ -16,6 +16,9 @@ Our data serialization use bfs traversal. This is just for when you got wrong an
 
 You can use other method to do serializaiton and deserialization.
  */
+/**
+二叉树的序列化和重组。考察的是bfs。可以采用递归和迭代。其中迭代借助了队列queue，迭代的重组采用了二级指针，可以避免root的特例。
+*/
 
 /**
  * Definition of TreeNode:
@@ -31,37 +34,31 @@ You can use other method to do serializaiton and deserialization.
  */
 
 
-class Solution {
+class Solution{
 public:
-    /**
-     * This method will be invoked first, you should design your own algorithm
-     * to serialize a binary tree which denote by a root node to a string which
-     * can be easily deserialized by your own "deserialize" method later.
-     */
+    // Encodes a tree to a single string.
     string serialize(TreeNode* root) {
-        queue<TreeNode*> q;
-        q.push(root);
+        if (root == nullptr) return "#";
+        return to_string(root->val)+","+serialize(root->left)+","+serialize(root->right);
+    }
+    string serialize(TreeNode* root){
+        queue<TreeNode*> myque;
         string str;
-        while (!q.empty()) {
-            if (q.front() == nullptr) {
-                str = str + "#,";
-            } else {
-                q.push(q.front()->left);
-                q.push(q.front()->right);
-                str = str + to_string(q.front()->val) + ",";
+        myque.push(root);
+        while(!myque.empty()){
+            TreeNode* tmp=myque.front();
+            if(tmp==nullptr) str+="#,";
+            else {
+                str=str+to_string(tmp->val)+',';
+                myque.push(tmp->left);
+                myque.push(tmp->right);
             }
-            q.pop();
+            myque.pop();
         }
         return str;
     }
 
-    /**
-     * This method will be invoked second, the argument data is what exactly
-     * you serialized at method "serialize", that means the data is not given by
-     * system, it's given by your own serialize method. So the format of data is
-     * designed by yourself, and deserialize it here as you serialize it in
-     * "serialize" method.
-     */
+    // Decodes your encoded data to tree.
     TreeNode* deserialize(string data) {
         TreeNode* root = nullptr;
         queue<TreeNode**> q;
@@ -70,7 +67,6 @@ public:
         while (first != data.end()) {
             TreeNode** pp = q.front();
             if (*first == '#') {
-                // *pp = nullptr;
                 first+=2;
             } else {
                 string::iterator last = find(first, data.end(), ',');
@@ -83,6 +79,29 @@ public:
             q.pop();
         }
         return root;
+    }
+    
+    TreeNode* deserialize(string data) {
+        return mydeserialize(data);
+    }
+    TreeNode* mydeserialize(string& data) {
+        if (data[0]=='#') {
+            if(data.size() > 1) data = data.substr(2);
+            return nullptr;
+        } else {
+            TreeNode* node = new TreeNode(helper(data));
+            node->left = mydeserialize(data);
+            node->right = mydeserialize(data);
+            return node;
+        }
+    }
+
+private:
+    int helper(string& data) {
+        int pos = data.find(',');
+        int val = stoi(data.substr(0,pos));
+        data = data.substr(pos+1);
+        return val;
     }
 };
 
